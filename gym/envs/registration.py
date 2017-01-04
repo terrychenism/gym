@@ -37,7 +37,19 @@ class EnvSpec(object):
         trials (int): The number of trials run in official evaluation
     """
 
-    def __init__(self, id, entry_point=None, trials=100, reward_threshold=None, local_only=False, kwargs=None, nondeterministic=False, tags=None, timestep_limit=None):
+    def __init__(self,
+                 id,
+                 entry_point=None,
+                 trials=100,
+                 reward_threshold=None,
+                 local_only=False,
+                 kwargs=None,
+                 nondeterministic=False,
+                 tags=None,
+                 timestep_limit=None,
+                 max_episode_steps=None,
+                 max_episode_seconds=None,
+             ):
         self.id = id
         # Evaluation parameters
         self.trials = trials
@@ -49,7 +61,12 @@ class EnvSpec(object):
             tags = {}
         self.tags = tags
 
-        self.timestep_limit = timestep_limit
+        self.max_episode_steps = max_episode_steps
+        self.max_episode_seconds = max_episode_seconds
+
+        # Legacy name for max_episode_timesteps
+        if timestep_limit is not None:
+            self.timestep_limit = timestep_limit
 
         # We may make some of these other parameters public if they're
         # useful.
@@ -78,15 +95,14 @@ class EnvSpec(object):
 
     @property
     def timestep_limit(self):
-        logger.warn("DEPRECATION WARNING: env.spec.timestep_limit has been deprecated. Replace your call to `env.spec.timestep_limit` with `env.spec.tags.get('wrapper_config.TimeLimit.max_episode_steps')`. This change was made 12/28/2016 and is included in version 0.7.0")
-        return self.tags.get('wrapper_config.TimeLimit.max_episode_steps')
+        logger.warn("DEPRECATION WARNING: env.spec.timestep_limit has been deprecated. Replace any calls to `env.spec.timestep_limit` with `env.spec.max_episode_steps` . This change was made 01/03/2016 and is included in gym version 0.8.0. If you are getting many of these warnings, you may need to update universe past version 0.22.0")
+        return self.max_episode_steps
 
     @timestep_limit.setter
     def timestep_limit(self, timestep_limit):
-        if timestep_limit is not None:
-            logger.warn(
-                "DEPRECATION WARNING: env.spec.timestep_limit has been deprecated. Replace any calls to `register(timestep_limit=200)` with `register(tags={'wrapper_config.TimeLimit.max_episode_steps': 200)}`, . This change was made 12/28/2016 and is included in gym version 0.7.0. If you are getting many of these warnings, you may need to update universe past version 0.21.1")
-            self.tags['wrapper_config.TimeLimit.max_episode_steps'] = timestep_limit
+        logger.warn(
+            "DEPRECATION WARNING: env.spec.timestep_limit has been deprecated. Replace any calls to `register(timestep_limit=200)` with `register(max_episode_steps=200)` . This change was made 01/03/2016 and is included in gym version 0.8.0. If you are getting many of these warnings, you may need to update universe past version 0.22.0")
+        self.tags['wrapper_config.TimeLimit.max_episode_steps'] = timestep_limit
 
 class EnvRegistry(object):
     """Register an env by ID. IDs remain stable over time and are
